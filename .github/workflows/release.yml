@@ -1,0 +1,30 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+env:
+  # Upstream vrtmrz/obsidian-livesync ref the image is built from.
+  # Bump procedure: update this ref, commit, push a new v* tag.
+  UPSTREAM_REF: "0.25.79"
+permissions:
+  contents: read
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: vrtmrz/obsidian-livesync
+          ref: ${{ env.UPSTREAM_REF }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/apps/cli/Dockerfile
+          push: true
+          tags: ghcr.io/vol1003-labs/livesync-cli:${{ github.ref_name }}
